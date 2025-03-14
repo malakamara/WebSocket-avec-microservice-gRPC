@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat WebSocket</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+      }
+      header {
+        background-color: #4caf50;
+        color: white;
+        padding: 15px;
+        text-align: center;
+      }
+      .container {
+        width: 80%;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      input[type="text"] {
+        width: calc(100% - 120px);
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        padding: 10px;
+        background-color: #e4e4e4;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        max-width: 600px;
+      }
+      li:nth-child(odd) {
+        background-color: #d1ffd1;
+      }
+      .chat-box {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+      .message-input {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Chat WebSocket</h1>
+    </header>
+
+    <div class="container">
+      <div class="chat-box">
+        <div class="message-input">
+          <input type="text" id="roomId" placeholder="ID de la salle" />
+        </div>
+        <br /><br />
+        <div class="message-input">
+          <input type="text" id="message" placeholder="Écrire un message" />
+          <button onclick="sendMessage()">Envoyer</button>
+        </div>
+      </div>
+
+      <ul id="messages"></ul>
+    </div>
+
+    <script>
+      const ws = new WebSocket("ws://localhost:8080");
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.history) {
+          document.getElementById("messages").innerHTML = data.history
+            .map((msg) => `<li>${msg.sender_id}: ${msg.content}</li>`)
+            .join("");
+        } else {
+          const li = document.createElement("li");
+          li.textContent = `${data.chat_message.sender_id}: ${data.chat_message.content}`;
+          document.getElementById("messages").appendChild(li);
+        }
+      };
+
+      function sendMessage() {
+        const msg = document.getElementById("message").value;
+        if (msg.trim() !== "") {
+          ws.send(
+            JSON.stringify({
+              chat_message: {
+                sender_id: "User1",
+                content: msg,
+                room_id: "room1",
+              },
+            })
+          );
+          document.getElementById("message").value = ""; // Clear input after sending
+        }
+      }
+    </script>
+  </body>
+</html>
